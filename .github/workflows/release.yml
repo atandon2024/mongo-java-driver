@@ -24,10 +24,6 @@ jobs:
       - name: "Create release output"
         run: echo '🎬 Release process for version ${{ env.RELEASE_VERSION }} started by @${{ github.triggering_actor }}' >> $GITHUB_STEP_SUMMARY
 
-      - uses: mongodb-labs/drivers-github-tools/secure-checkout@v2
-        with:
-          app_id: ${{ vars.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: "Store version numbers in env variables"
         # The awk command to increase the version number was copied from
