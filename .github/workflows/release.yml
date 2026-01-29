@@ -121,6 +121,8 @@ jobs:
 
       - name: "Create draft release with generated changelog"
         run: |
+          # Get the latest tag in this repository
+          LATEST_TAG=$(git describe --tags --abbrev=0)
           if [[ "${{ inputs.version }}" =~ (alpha|beta|rc) ]]; then
             PRERELEASE="--prerelease --latest=false"
           fi
@@ -130,6 +132,7 @@ jobs:
             --target ${{ env.RELEASE_BRANCH }} \
             --title "Java Driver ${{ env.RELEASE_VERSION }} ($(date '+%B %d, %Y'))" \
             --generate-notes \
+            --notes-start-tag ${LATEST_TAG} \
             --draft\
           )" >> "$GITHUB_ENV"
 
