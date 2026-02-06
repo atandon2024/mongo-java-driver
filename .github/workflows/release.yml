@@ -21,6 +21,16 @@ jobs:
       contents: write
 
     steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: "Store current tag in environment variable"
+        # Store current tag before creating new tag
+        run: echo "CURRENT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
       - name: "Create release output"
         run: echo '🎬 Release process for version ${{ env.RELEASE_VERSION }} started by @${{ github.triggering_actor }}' >> $GITHUB_STEP_SUMMARY
 
@@ -117,8 +127,6 @@ jobs:
 
       - name: "Create draft release with generated changelog"
         run: |
-          # Get the latest tag in this repository
-          LATEST_TAG=$(git describe --tags --abbrev=0)
           if [[ "${{ inputs.version }}" =~ (alpha|beta|rc) ]]; then
             PRERELEASE="--prerelease --latest=false"
           fi
@@ -128,7 +136,7 @@ jobs:
             --target ${{ env.RELEASE_BRANCH }} \
             --title "Java Driver ${{ env.RELEASE_VERSION }} ($(date '+%B %d, %Y'))" \
             --generate-notes \
-            --notes-start-tag ${LATEST_TAG} \
+            --notes-start-tag "$CURRENT_TAG" \
             --draft\
           )" >> "$GITHUB_ENV"
 
