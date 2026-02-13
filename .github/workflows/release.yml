@@ -36,6 +36,12 @@ jobs:
           fetch-depth: 0
           submodules: "false"
 
+      
+      - name: Configure git identity (required for commits/tags)
+        run: |
+          git config --global user.name "Ajay"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Store GitHub token in environment
         run: echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> "$GITHUB_ENV"
         shell: bash
