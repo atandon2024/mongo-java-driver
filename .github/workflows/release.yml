@@ -114,6 +114,8 @@ jobs:
       - name: "Create new release branch for non-patch release"
         if: ${{ endsWith(env.RELEASE_VERSION, '.0') && env.RELEASE_BRANCH != github.ref_name }}
         run: |
+          echo github.ref_name: ${{ github.ref_name }}
+          echo env.RELEASE_BRANCH: ${{ env.RELEASE_BRANCH }}
           echo '🆕 Creating new release branch ${{ env.RELEASE_BRANCH }} from ${{ github.ref_name }}' >> $GITHUB_STEP_SUMMARY
           git checkout -b ${{ env.RELEASE_BRANCH }}
           NEXT_MINOR_VERSION=$(echo "${{ env.RELEASE_VERSION }}" | awk -F. -v OFS=. '{$2 += 1 ; $NF = 0 ; print}')
