@@ -120,7 +120,7 @@ jobs:
           echo "➡️ Bumping version for ${{ github.ref_name }} branch to ${NEXT_MINOR_VERSION}" >> $GITHUB_STEP_SUMMARY
           git checkout ${{ github.ref_name }}
           .github/workflows/bump-version.sh "${{ env.RELEASE_VERSION_WITHOUT_SUFFIX }}-SNAPSHOT" "${NEXT_MINOR_VERSION}-SNAPSHOT"
-          git push origin ${{ github.ref_name }}
+          git push origin ${{ github.ref_name }} 
           git checkout ${{ env.RELEASE_BRANCH }}
 
       # This step bumps version numbers in gradle.properties and creates git artifacts for the release
