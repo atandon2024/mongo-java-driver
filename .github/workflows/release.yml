@@ -11,23 +11,18 @@ on:
 
 jobs:
   prepare-release:
-    environment: release
     name: "Prepare release"
     runs-on: ubuntu-latest
     permissions:
-      # Write permission for id-token is necessary to generate a new token for the GitHub App
-      id-token: write
       # Write permission for contents is to ensure we're allowed to push to the repository
       contents: write
 
     steps:
       - name: "Create release output"
         run: echo "🎬 Release process for version ${RELEASE_VERSION} started by @${GITHUB_TRIGGERING_ACTOR}" >> $GITHUB_STEP_SUMMARY
-      
-      - uses: mongodb-labs/drivers-github-tools/secure-checkout@v2
+
+      - uses: actions/checkout@v4
         with:
-          app_id: ${{ vars.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
           fetch-depth: 0
 
       - name: "Store version numbers in env variables"
@@ -98,6 +93,7 @@ jobs:
       - name: "Set git author information"
         env:
           ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           GITHUB_USER_NAME=$(gh api users/${ACTOR} --jq '.name')
           GITHUB_USER_ID=$(gh api users/${ACTOR} --jq '.id')
@@ -130,6 +126,8 @@ jobs:
           git push origin r${RELEASE_VERSION}
 
       - name: "Create draft release with generated changelog"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${RELEASE_VERSION}" =~ (alpha|beta|rc) ]]; then
             PRERELEASE="--prerelease --latest=false"
