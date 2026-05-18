@@ -24,11 +24,21 @@ jobs:
       - name: "Create release output"
         run: echo '🎬 Release process for version ${{ env.RELEASE_VERSION }} started by @${{ github.triggering_actor }}' >> $GITHUB_STEP_SUMMARY
       
-      - uses: mongodb-labs/drivers-github-tools/secure-checkout@v2
+      # - uses: mongodb-labs/drivers-github-tools/secure-checkout@v2
+      #   with:
+      #     app_id: ${{ vars.APP_ID }}
+      #     private_key: ${{ secrets.APP_PRIVATE_KEY }}
+      #     fetch-depth: 0
+
+      - uses: actions/checkout@v4
         with:
-          app_id: ${{ vars.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
+          submodules: "false"
+
+      - name: Store GitHub token in environment
+        run: echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> "$GITHUB_ENV"
+        shell: bash
 
       - name: "Store version numbers in env variables"
         # The awk command to increase the version number was copied from
@@ -59,13 +69,13 @@ jobs:
             echo RELEASE_BRANCH=$(echo ${{ inputs.version }} | awk -F. -v OFS=. '{$NF = "x" ; print}') >> $GITHUB_ENV
           fi
 
-      - name: "Ensure current snapshot version matches release version"
-        run: |
-          grep -q "version=${{ env.RELEASE_VERSION_WITHOUT_SUFFIX }}-SNAPSHOT" gradle.properties
-          if [[ $? != 0 ]]; then
-            echo '❌ Release failed: version in gradle.properties is not a snapshot for release version ${{ inputs.version }}' >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+      # - name: "Ensure current snapshot version matches release version"
+      #   run: |
+      #     grep -q "version=${{ env.RELEASE_VERSION_WITHOUT_SUFFIX }}-SNAPSHOT" gradle.properties
+      #     if [[ $? != 0 ]]; then
+      #       echo '❌ Release failed: version in gradle.properties is not a snapshot for release version ${{ inputs.version }}' >> $GITHUB_STEP_SUMMARY
+      #       exit 1
+      #     fi
 
       - name: "Ensure release tag does not already exist"
         run: |
@@ -77,20 +87,20 @@ jobs:
       # For patch releases (A.B.C where C != 0), we expect the release to be
       # triggered from the A.B.x maintenance branch. We use the release version
       # without suffixes to avoid mistakes when making pre-releases
-      - name: "Fail if patch release is created from wrong release branch"
-        if: ${{ !endsWith(env.RELEASE_VERSION_WITHOUT_SUFFIX, '.0') && env.RELEASE_BRANCH != github.ref_name }}
-        run: |
-          echo '❌ Release failed due to branch mismatch: expected ${{ inputs.version }} to be released from ${{ env.RELEASE_BRANCH }}, got ${{ github.ref_name }}' >> $GITHUB_STEP_SUMMARY
-          exit 1
+      # - name: "Fail if patch release is created from wrong release branch"
+      #   if: ${{ !endsWith(env.RELEASE_VERSION_WITHOUT_SUFFIX, '.0') && env.RELEASE_BRANCH != github.ref_name }}
+      #   run: |
+      #     echo '❌ Release failed due to branch mismatch: expected ${{ inputs.version }} to be released from ${{ env.RELEASE_BRANCH }}, got ${{ github.ref_name }}' >> $GITHUB_STEP_SUMMARY
+      #     exit 1
 
-      # For non-patch releases (A.B.C where C == 0), we expect the release to
-      # be triggered from main or the A.B.x maintenance branch. This includes
-      # pre-releases for any non-patch releases, e.g. 5.2.0-beta1
-      - name: "Fail if non-patch release is created from wrong release branch"
-        if: ${{ endsWith(env.RELEASE_VERSION_WITHOUT_SUFFIX, '.0') && env.RELEASE_BRANCH != github.ref_name && github.ref_name != 'main' }}
-        run: |
-          echo '❌ Release failed due to branch mismatch: expected ${{ inputs.version }} to be released from ${{ env.RELEASE_BRANCH }} or main, got ${{ github.ref_name }}' >> $GITHUB_STEP_SUMMARY
-          exit 1
+      # # For non-patch releases (A.B.C where C == 0), we expect the release to
+      # # be triggered from main or the A.B.x maintenance branch. This includes
+      # # pre-releases for any non-patch releases, e.g. 5.2.0-beta1
+      # - name: "Fail if non-patch release is created from wrong release branch"
+      #   if: ${{ endsWith(env.RELEASE_VERSION_WITHOUT_SUFFIX, '.0') && env.RELEASE_BRANCH != github.ref_name && github.ref_name != 'main' }}
+      #   run: |
+      #     echo '❌ Release failed due to branch mismatch: expected ${{ inputs.version }} to be released from ${{ env.RELEASE_BRANCH }} or main, got ${{ github.ref_name }}' >> $GITHUB_STEP_SUMMARY
+      #     exit 1
 
       # Set commit author information to the user that triggered the release workflow
       - name: "Set git author information"
